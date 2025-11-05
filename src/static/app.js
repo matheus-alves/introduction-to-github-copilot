@@ -22,12 +22,42 @@ document.addEventListener("DOMContentLoaded", () => {
                     <p><strong>Available Spots:</strong> ${details.max_participants - details.participants.length} of ${details.max_participants}</p>
                     <div class="participants-list">
                         <h5>Current Participants:</h5>
-                        <ul>
-                            ${details.participants.map((email) => `<li>${email}</li>`).join("")}
-                        </ul>
+            <ul style="list-style-type: none; padding-left: 0;">
+              ${details.participants.map((email) => `
+                <li style="display: flex; align-items: center; gap: 8px;">
+                  <span>${email}</span>
+                  <span class="delete-participant" data-activity="${name}" data-email="${email}" style="cursor:pointer;color:#d00;font-size:18px;" title="Remove participant">&#128465;</span>
+                </li>
+              `).join("")}
+            </ul>
                     </div>
                 `;
-        activitiesList.appendChild(card);
+
+    activitiesList.appendChild(card);
+
+    // Add delete icon event listeners
+    card.querySelectorAll('.delete-participant').forEach(icon => {
+      icon.addEventListener('click', (e) => {
+        const activity = icon.getAttribute('data-activity');
+        const email = icon.getAttribute('data-email');
+        fetch(`/activities/${encodeURIComponent(activity)}/unregister?email=${encodeURIComponent(email)}`, {
+          method: 'POST',
+        })
+        .then(response => response.json())
+        .then(data => {
+          messageDiv.textContent = data.message;
+          messageDiv.className = "message success";
+          messageDiv.classList.remove("hidden");
+          // Refresh activities list
+          location.reload();
+        })
+        .catch(error => {
+          messageDiv.textContent = "Error removing participant";
+          messageDiv.className = "message error";
+          messageDiv.classList.remove("hidden");
+        });
+      });
+    });
 
         // Add to select dropdown
         const option = document.createElement("option");
